@@ -8,31 +8,31 @@
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable("users", {
+  pgm.createTable("exam_results", {
     id: {
       type: "serial",
-      primaryKey: true,
+      primaryKey: "true",
     },
-    name: {
-      type: "varchar(100)",
+    exam_registration_id: {
+      type: "integer",
+      notNull: true,
+      references: "exam_registrations(id)",
+      onDelete: "CASCADE",
+    },
+    total_question: {
+      type: "integer",
       notNull: true,
     },
-    email: {
-      type: "text",
+    score: {
+      type: "integer",
       notNull: true,
-      unique: true,
     },
-    password: {
-      type: "text",
+    is_passed: {
+      type: "integer",
       notNull: true,
     },
     created_at: {
       type: "timestamptz",
-      notNull: true,
-    },
-    updated_at: {
-      type: "timestamptz",
-      notNull: true,
     },
   });
 };
@@ -42,6 +42,4 @@ exports.up = (pgm) => {
  * @param run {() => void | undefined}
  * @returns {Promise<void> | void}
  */
-exports.down = (pgm) => {
-  pgm.dropTable("users");
-};
+exports.down = (pgm) => {};
