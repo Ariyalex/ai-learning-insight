@@ -8,23 +8,22 @@
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable("users", {
+  pgm.createTable("exam_registrations", {
     id: {
       type: "serial",
-      primaryKey: true,
+      primaryKey: "true",
     },
-    name: {
-      type: "varchar(100)",
+    tutorial_id: {
+      type: "integer",
       notNull: true,
+      references: "developer_journey_tutorials(id)",
+      onDelete: "NO ACTION",
     },
-    email: {
-      type: "text",
+    examinees_id: {
+      type: "integer",
       notNull: true,
-      unique: true,
-    },
-    password: {
-      type: "text",
-      notNull: true,
+      references: "users(id)",
+      onDelete: "CASCADE",
     },
     created_at: {
       type: "timestamptz",
@@ -33,6 +32,17 @@ exports.up = (pgm) => {
     updated_at: {
       type: "timestamptz",
       notNull: true,
+    },
+    deadline_at: {
+      type: "timestamptz",
+      notNull: true,
+    },
+    exam_finished_at: {
+      type: "timestamptz",
+      notNull: true,
+    },
+    deleted_at: {
+      type: "timestamptz",
     },
   });
 };
@@ -43,5 +53,5 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
-  pgm.dropTable("users");
+  pgm.dropTable("exam_registrations");
 };

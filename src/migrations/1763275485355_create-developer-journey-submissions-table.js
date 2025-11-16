@@ -8,23 +8,28 @@
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable("users", {
+  pgm.createTable("developer_journey_submissions", {
     id: {
       type: "serial",
-      primaryKey: true,
+      primaryKey: "true",
     },
-    name: {
-      type: "varchar(100)",
+    submitter_id: {
+      type: "integer",
       notNull: true,
+      references: "users(id)",
+      onDelete: "CASCADE",
     },
-    email: {
-      type: "text",
+    journey_id: {
+      type: "integer",
       notNull: true,
-      unique: true,
+      references: "developer_journeys(id)",
+      onDelete: "NO ACTION",
     },
-    password: {
-      type: "text",
+    quiz_id: {
+      type: "integer",
       notNull: true,
+      references: "developer_journey_tutorials(id)",
+      onDelete: "NO ACTION",
     },
     created_at: {
       type: "timestamptz",
@@ -33,6 +38,12 @@ exports.up = (pgm) => {
     updated_at: {
       type: "timestamptz",
       notNull: true,
+    },
+    rating: {
+      type: "integer",
+    },
+    submission_duration: {
+      type: "integer",
     },
   });
 };
@@ -43,5 +54,5 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
-  pgm.dropTable("users");
+  pgm.dropTable("developer_journey_submissions");
 };
