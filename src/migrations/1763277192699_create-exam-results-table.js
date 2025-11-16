@@ -19,7 +19,7 @@ exports.up = (pgm) => {
       references: "exam_registrations(id)",
       onDelete: "CASCADE",
     },
-    total_question: {
+    total_questions: {
       type: "integer",
       notNull: true,
     },

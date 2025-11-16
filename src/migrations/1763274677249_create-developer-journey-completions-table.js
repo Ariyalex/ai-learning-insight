@@ -33,12 +33,12 @@ exports.up = (pgm) => {
       type: "timestamptz",
       notNull: true,
     },
-    enroling_times: {
+    enrolling_times: {
       type: "integer",
       notNull: true,
     },
     enrollments_at: {
-      type: "timestamptz",
+      type: "text",
       notNull: true,
     },
     last_enrolled_at: {
@@ -48,7 +48,7 @@ exports.up = (pgm) => {
       type: "integer",
     },
     avg_submission_rating: {
-      type: "numeric(1,2)",
+      type: "numeric(3,2)",
     },
   });
 };
