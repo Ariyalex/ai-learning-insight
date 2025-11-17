@@ -1,6 +1,10 @@
+const autoBind = require("auto-bind");
+
 class UserRepository {
   constructor() {
     this.db = require("../db");
+
+    autoBind(this);
   }
 
   async findByEmailWithPassword(email) {

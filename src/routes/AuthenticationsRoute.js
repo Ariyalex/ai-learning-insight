@@ -7,20 +7,25 @@ const {
   refreshTokenPayloadSchema,
   logoutPayloadSchema,
 } = require("../validator/AuthValidator");
+const asyncHandler = require("../utils/asyncHandler");
 
 const authController = new AuthController();
 const authRouter = express.Router();
 
-authRouter.post("/login", validator(loginPayloadSchema), authController.login);
+authRouter.post(
+  "/login",
+  validator(loginPayloadSchema),
+  asyncHandler(authController.login)
+);
 authRouter.post(
   "/refresh",
   validator(refreshTokenPayloadSchema),
-  authController.refresh
+  asyncHandler(authController.refresh)
 );
 authRouter.post(
   "/logout",
   validator(logoutPayloadSchema),
-  authController.logout
+  asyncHandler(authController.logout)
 );
 
 module.exports = authRouter;

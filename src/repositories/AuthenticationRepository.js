@@ -1,6 +1,10 @@
+const autoBind = require("auto-bind");
+
 class AuthenticationRepository {
   constructor() {
     this.db = require("../db");
+
+    autoBind(this);
   }
 
   async create({ userId, tokenHash, expiresAt }) {

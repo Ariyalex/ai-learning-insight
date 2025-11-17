@@ -8,11 +8,16 @@ const {
   generateRefreshToken,
   refreshExpiresAt,
 } = require("../tokenize/TokenManager");
+const autoBind = require("auto-bind");
+const InvariantError = require("../exceptions/InvariantError");
+const AuthenticationError = require("../exceptions/AuthenticationError");
 
 class AuthService {
   constructor() {
     this.authRepo = new AuthenticationRepository();
     this.userRepo = new UserRepository();
+
+    autoBind(this);
   }
 
   async authenticateUser(email, password) {
@@ -38,10 +43,10 @@ class AuthService {
 
     const record = await this.authRepo.findByToken(refreshHash);
 
-    if (!record) throw new Error("invalid_refresh");
-    if (record.revoked) throw new Error("revoked_refresh");
+    if (!record) throw new AuthenticationError("Invalid refresh token");
+    if (record.revoked) throw new AuthenticationError("Refresh token revoked");
     if (record.expires_at && new Date(record.expires_at) < new Date())
-      throw new Error("expired_refresh");
+      throw new AuthenticationError("Refresh token expired");
 
     await this.authRepo.revokeById(record.id);
 
@@ -66,11 +71,11 @@ class AuthService {
   async revokeRefreshToken(refreshToken) {
     const refreshHash = hashToken(refreshToken);
     const record = await this.authRepo.findByToken(refreshHash);
-    if (record.revoked) {
-      return false;
-    }
+
+    if (!record) throw new InvariantError("Refresh token not found");
+    if (record.revoked)
+      throw new InvariantError("Refresh token alredy revoked");
     await this.authRepo.revokeByToken(refreshHash);
-    return true;
   }
 }
 
