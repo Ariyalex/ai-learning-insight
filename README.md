@@ -72,23 +72,25 @@ ai_learning_insight/
    npm install
    ```
 
-3. **Setup environment variables**:
-   Buat file `.env` di root direktori:
+3. **Setup database**:
 
-   ```env
-   PORT=3000
-   HOST=localhost
-   DATABASE_URL=postgres://username:password@localhost:5432/ai_learning_insight
-   NODE_ENV=development
-   ```
-
-   Ganti `username`, `password`, dan nama database sesuai setup PostgreSQL Anda.
-
-4. **Setup database**:
    - Buat database PostgreSQL baru dengan nama `ai_learning_insight`.
    - Jalankan migrasi untuk membuat tabel:
      ```bash
      npm run migrate:up
+     ```
+
+4. **Setup environment variables**:
+
+   - Ganti file `.env.example` menjadi `.env`:
+   - Isi dan ganti beberapa value sesuai instruksi dari `.env.example` dan kondisi database masing-masing
+
+5. **Import Dataset ke Database**
+   - Buat direktori baru di root dengan nama `.csv_data`
+   - Isi dengan file csv dari dataset yang sudah dikirimkan di google drive
+   - Jalankan perintah untuk import data:
+     ```bash
+     npm run import:csv
      ```
 
 ## Menjalankan Aplikasi
