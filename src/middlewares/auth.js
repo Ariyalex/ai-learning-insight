@@ -2,7 +2,7 @@ const { verifyAccessToken } = require("../tokenize/TokenManager");
 
 module.exports = (req, res, next) => {
   const header = req.headers.authorization;
-  if (!header || !header.startWith("Bearer ")) {
+  if (!header || !header.startsWith("Bearer ")) {
     return res.status(401).json({ message: "No token provided" });
   }
 

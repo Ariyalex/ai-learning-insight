@@ -14,6 +14,14 @@ class UserRepository {
     );
     return rows[0] || null;
   }
+
+  async findById(id) {
+    const { rows } = await this.db.query(
+      "select id, name, email, created_at, updated_at from users where id = $1 limit 1",
+      [id]
+    );
+    return rows[0] || null;
+  }
 }
 
 module.exports = UserRepository;
