@@ -11,10 +11,10 @@ services:
       - db
     entrypoint: ["/bin/sh", "/src/entrypoint.sh"]
 
-  ml:
-    image: ghcr.io/ariyalex/postgres:15
-    env_file:
-      - ./ml/.env
-    ports:
-      - "8000:8000"
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+  # ml:
+  #   image: ghcr.io/ariyalex/postgres:15
+  #   env_file:
+  #     - ./ml/.env
+  #   ports:
+  #     - "8000:8000"
+  #   command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
