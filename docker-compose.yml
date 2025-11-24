@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_DB: ${PGDATABASE}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/src
+      - /src/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    command: ["./entrypoint.sh"]
+
+  ml:
+    build:
+      context: ./ml
+      dockerfile: dockerfile
+    env_file:
+      - ./ml/.env
+    volumes:
+      - ./ml:/app
+      - /app/__pycache__
+    ports:
+      - "8000:8000"
+    command:
+      ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+volumes:
+  db-data:
