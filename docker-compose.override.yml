@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   backend:
-    image: yourhubuser/ai-learning-backend:latest
+    image: ghcr.io/ariyalex/ai-learning-insight-backend:latest
     env_file:
       - ./backend/.env
     ports:
@@ -12,7 +12,7 @@ services:
     entrypoint: ["/bin/sh", "/src/entrypoint.sh"]
 
   ml:
-    image: yourhubuser/ai-learning-ml:latest
+    image: ghcr.io/ariyalex/postgres:15
     env_file:
       - ./ml/.env
     ports:
