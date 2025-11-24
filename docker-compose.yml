@@ -27,8 +27,10 @@ services:
       - "3000:3000"
     depends_on:
       - db
-    command: ["./entrypoint.sh"]
+    entrypoint: ["/bin/sh" ,"./entrypoint.sh"]
 
+
+# untuk yang ml belum ada, jangan dirun dulu, nanti tim ML edit bagian ini ya
   ml:
     build:
       context: ./ml

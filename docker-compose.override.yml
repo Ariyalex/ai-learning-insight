@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  backend:
+    image: yourhubuser/ai-learning-backend:latest
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    entrypoint: ["/bin/sh", "/src/entrypoint.sh"]
+
+  ml:
+    image: yourhubuser/ai-learning-ml:latest
+    env_file:
+      - ./ml/.env
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
