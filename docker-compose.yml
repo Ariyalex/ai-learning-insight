@@ -6,9 +6,9 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      POSTGRES_USER: ${PGUSER}
-      POSTGRES_PASSWORD: ${PGPASSWORD}
-      POSTGRES_DB: ${PGDATABASE}
+      POSTGRES_USER: capstone
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: ai_learning_insight
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
@@ -27,10 +27,9 @@ services:
       - "3000:3000"
     depends_on:
       - db
-    entrypoint: ["/bin/sh" ,"./entrypoint.sh"]
+    entrypoint: ["/bin/sh", "./entrypoint.sh"]
 
-
-# untuk yang ml belum ada, jangan dirun dulu, nanti tim ML edit bagian ini ya
+  # untuk yang ml belum ada, jangan dirun dulu, nanti tim ML edit bagian ini ya
   ml:
     build:
       context: ./ml
@@ -43,7 +42,7 @@ services:
     ports:
       - "8000:8000"
     command:
-      ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 volumes:
   db-data:
