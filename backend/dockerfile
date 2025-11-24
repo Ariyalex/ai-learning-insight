@@ -1,0 +1,21 @@
+# base image node
+FROM node:20-alpine
+
+# set working directory
+WORKDIR /src
+
+# copy package.json and package-lock.json
+COPY package*.json ./
+
+# install dependencies
+RUN npm install
+
+# copy source code
+COPY . .
+
+# make etnrypoint executable
+RUN chmod +x ./entrypoint.sh
+
+EXPOSE 3000
+
+CMD ["./entrypoint.sh"]

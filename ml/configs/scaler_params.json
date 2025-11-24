@@ -1,0 +1,38 @@
+{
+    "feature_order": [
+        "total_materials_opened",
+        "total_active_days",
+        "total_completed",
+        "avg_submission_duration",
+        "avg_submission_rating",
+        "total_study_duration",
+        "avg_completion_rating",
+        "avg_exam_score",
+        "exam_pass_rate",
+        "exam_count"
+    ],
+    "median": [
+        15.0,
+        15.0,
+        15.0,
+        226.16666666666666,
+        71.33333333333333,
+        1186.0,
+        71.0,
+        69.0,
+        0.0,
+        2.0
+    ],
+    "iqr": [
+        15.5,
+        15.5,
+        19.5,
+        579.4807692307693,
+        22.40079365079366,
+        1217.0,
+        20.0,
+        33.5,
+        1.0,
+        2.0
+    ]
+}

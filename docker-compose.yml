@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: capstone
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: ai_learning_insight
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/src
+      - /src/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    entrypoint: ["/bin/sh", "./entrypoint.sh"]
+
+  # untuk yang ml belum ada, jangan dirun dulu, nanti tim ML edit bagian ini ya
+  ml:
+    build:
+      context: ./ml
+      dockerfile: dockerfile
+    env_file:
+      - ./ml/.env
+    volumes:
+      - ./ml:/app
+      - /app/__pycache__
+    ports:
+      - "8000:8000"
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+volumes:
+  db-data:

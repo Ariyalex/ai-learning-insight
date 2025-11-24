@@ -1,6 +1,6 @@
 const express = require("express");
 const authRouter = require("./routes/AuthenticationsRoute");
-const errorHandler = require("./middlewares/errorHandler");
+const errorHandler = require("./middlewares/ErrorHandler");
 const userRouter = require("./routes/UserRoute");
 
 const app = express();

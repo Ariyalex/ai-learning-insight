@@ -1,5 +1,5 @@
 const autoBind = require("auto-bind");
-const AuthService = require("../services/authService");
+const AuthService = require("../services/AuthService");
 const InvariantError = require("../exceptions/InvariantError");
 const { success } = require("../utils/responseFormatter");
 
