@@ -11,7 +11,8 @@ from services.insight import (
     compute_activity_academic_scores,
     label_activity,
     label_academic,
-    map_cluster_label
+    map_cluster_label,
+    upsert_process_ml_user
 )
 
 load_dotenv(dotenv_path=".env")
@@ -24,132 +25,137 @@ app = FastAPI(
     description="Microservice untuk clustering tipe belajar + insight tambahan."
 )
 
-class InsightRequest(BaseModel):
+class ProsesRequest(BaseModel):
     developer_id: str | int
 
-class InsightResponse(BaseModel):
+class ProsesResponse(BaseModel):
+    success: bool
+    status: int
+    message: str
     developer_id: str | int
-    learner_insight: str
-    activity_insight: str
-    academic_insight: str
-
-class LearnerRequest(BaseModel):
-    developer_id: str | int
-
-class LearnerResponse(BaseModel):
-    developer_id: str | int
-    learner_type: str
-    activity_type: str
-    academic_type: str
-
+    
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-@app.post("/check/insight", response_model=InsightResponse)
-def insight(req: InsightRequest):
+@app.post("/proses/insight", response_model=ProsesResponse)
+def check(req: ProsesRequest):
     dev_id = req.developer_id
 
-    # 1. Ambil fitur dari DB
-    feat = get_features_for_user(dev_id)
+    try:
+        # 1. Ambil fitur dari DB
+        feat = get_features_for_user(dev_id)
 
-    # 2. Convert → scaling
-    vec = to_feature_vector(feat)
-    vec_scaled = robust_scale(vec)
+        # 2. Predict cluster
+        cluster_id = predictor.predict_dict(feat)
 
-    # 3. Predict cluster
-    cluster_id = predictor.predict_dict(feat)
+        # 3. Insight tambahan
+        activity_score, academic_score = compute_activity_academic_scores(feat)
+        activity_type = label_activity(activity_score)
+        academic_type = label_academic(academic_score)
 
-    # 4. Insight tambahan
-    activity_score, academic_score = compute_activity_academic_scores(feat)
-    activity_insight = label_activity(activity_score)
-    academic_insight = label_academic(academic_score)
+        prompt_cluster_label_k = f"""
+        User ini ada di cluster {map_cluster_label(cluster_id)}.
 
-    prompt_learner_insight = f"""
-    User ini ada di cluster {map_cluster_label(cluster_id)}.
+        Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
 
-    Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
+        Format wajibnya adalah:
+        [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
 
-    Format wajibnya adalah:
-    [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
+        KETENTUAN SANGAT KETAT:
+        Hasil harus HANYA SATU (1) kalimat.
+        Total kata TIDAK BOLEH melebihi 15.
+        Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
+        """
 
-    KETENTUAN SANGAT KETAT:
-    Hasil harus HANYA SATU (1) kalimat.
-    Total kata TIDAK BOLEH melebihi 15.
-    Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
-    """
+        respon_cluster_label_k = gemini.models.generate_content(
+            model="gemini-2.5-flash",
+                contents=prompt_cluster_label_k,
+        )
+        cluster_label_k = respon_cluster_label_k.text.strip()
 
-    learner_response = gemini.models.generate_content(
-        model="gemini-2.5-flash",
-            contents=prompt_learner_insight,
-    )
-    learner_insight_text = learner_response.text.strip()
+        prompt_activity_insight_k = f"""
+        User ini ada di cluster {activity_type}.
 
-    prompt_activity_insight = f"""
-    User ini ada di cluster {activity_insight}.
+        Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
 
-    Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
+        Format wajibnya adalah:
+        [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
 
-    Format wajibnya adalah:
-    [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
+        KETENTUAN SANGAT KETAT:
+        Hasil harus HANYA SATU (1) kalimat.
+        Total kata TIDAK BOLEH melebihi 15.
+        Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
+        """
 
-    KETENTUAN SANGAT KETAT:
-    Hasil harus HANYA SATU (1) kalimat.
-    Total kata TIDAK BOLEH melebihi 15.
-    Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
-    """
+        respon_activity_insight_k = gemini.models.generate_content(
+            model="gemini-2.5-flash",
+                contents=prompt_activity_insight_k,
+        )
+        activity_insight_k = respon_activity_insight_k.text.strip()
+
+        prompt_academic_insight_k = f"""
+        User ini ada di cluster {academic_type}.
+
+        Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
+
+        Format wajibnya adalah:
+        [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
+
+        KETENTUAN SANGAT KETAT:
+        Hasil harus HANYA SATU (1) kalimat.
+        Total kata TIDAK BOLEH melebihi 15.
+        Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
+        """
+
+        respon_academic_insight_k = gemini.models.generate_content(
+            model="gemini-2.5-flash",
+                contents=prompt_academic_insight_k,
+        )
+        academic_insight_k = respon_academic_insight_k.text.strip()
+
+        data_for_db = {
+            "user_id": dev_id,
+            "total_materials_opened": feat["total_materials_opened"],
+            "total_active_days": feat["total_active_days"],
+            "total_completed": feat["total_completed"],
+            "avg_submission_rating": feat["avg_submission_rating"],
+            "avg_submission_duration": feat["avg_submission_duration"],
+            "total_study_duration": feat["total_study_duration"],
+            "avg_completion_rating": feat["avg_completion_rating"],
+            "avg_exam_score": feat["avg_exam_score"],
+            "exam_pass_rate": feat["exam_pass_rate"],
+            "exam_count": feat["exam_count"],
+            "cluster": cluster_id,
+            "cluster_label": map_cluster_label(cluster_id),
+            "activity_score": activity_score,
+            "academic_score": academic_score,
+            "activity_insight": activity_type,
+            "academic_insight": academic_type,
+            "cluster_label_k": cluster_label_k,
+            "activity_insight_k": activity_insight_k,
+            "academic_insight_k": academic_insight_k
+        }
+
+        # 4. INSERT / UPDATE
+        action = upsert_process_ml_user(data_for_db)
+
+        if action == "insert":
+            msg = "Insight berhasil & data baru berhasil disimpan."
+        else:
+            msg = "Insight berhasil& data lama berhasil diperbarui."
+        
+        return ProsesResponse(
+            success=True,
+            status=200,
+            message=msg,
+            developer_id=dev_id
+        )
     
-    activity_response = gemini.models.generate_content(
-        model="gemini-2.5-flash",
-            contents=prompt_activity_insight,
-    )
-    activity_insight_text = activity_response.text.strip()
-
-    prompt_academic_insight = f"""
-    User ini ada di cluster {academic_insight}.
-
-    Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
-
-    Format wajibnya adalah:
-    [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
-
-    KETENTUAN SANGAT KETAT:
-    Hasil harus HANYA SATU (1) kalimat.
-    Total kata TIDAK BOLEH melebihi 15.
-    Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
-    """
-
-    academic_response = gemini.models.generate_content(
-        model="gemini-2.5-flash",
-            contents=prompt_academic_insight,
-    )
-    academic_insight_text = academic_response.text.strip()
-
-    return InsightResponse(
-        developer_id=dev_id,
-        learner_insight=learner_insight_text,
-        activity_insight=activity_insight_text,
-        academic_insight=academic_insight_text
-    )
-
-@app.post("/check/learner_type", response_model=LearnerResponse)
-def learner(req: LearnerRequest):
-    dev_id = req.developer_id
-
-    # 1. Ambil fitur dari DB
-    feat = get_features_for_user(dev_id)
-
-    # 3. Predict cluster
-    cluster_id = predictor.predict_dict(feat)
-
-    # 4. Insight tambahan
-    activity_score, academic_score = compute_activity_academic_scores(feat)
-    activity_type = label_activity(activity_score)
-    academic_type = label_academic(academic_score)
-
-    return LearnerResponse(
-        developer_id=dev_id,
-        learner_type=map_cluster_label(cluster_id),
-        activity_type=activity_type,
-        academic_type=academic_type
-    )
+    except Exception as e:
+        return ProsesResponse(
+            success=False,
+            status=500,
+            message=f"Terjadi kesalahan: {str(e)}",
+            developer_id=dev_id
+        )
