@@ -6,6 +6,7 @@ BASE_PATH = os.path.dirname(__file__)
 
 class KMeansPredictor:
     def __init__(self):
+        
         centroid_path = os.path.join(BASE_PATH, "..", "models", "centroids.npy")
 
         # === FIX ERROR .npy pickle ===

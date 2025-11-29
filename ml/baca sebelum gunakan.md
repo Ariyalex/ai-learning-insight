@@ -47,3 +47,7 @@ scaler_params
 4. ### yang empat lakuin ini ###
 # Biar service berjalan!
 > uvicorn app:app --reload --host localhost --port 8000
+
+
+5. ### yang empat lakuin ini ###
+Untuk backend tambahin DB buat simpen hasil proses
