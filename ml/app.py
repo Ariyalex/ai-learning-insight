@@ -33,9 +33,6 @@ class ProsesResponse(BaseModel):
     status: int
     message: str
     developer_id: str | int
-    clusters_label_k: str | None = None
-    activitys_insight_k: str | None = None
-    academics_insight_k: str | None = None
 
 @app.get("/health")
 def health_check():
@@ -175,10 +172,7 @@ def check(req: ProsesRequest):
             success=True,
             status=200,
             message=msg,
-            developer_id=dev_id,
-            clusters_label_k=cluster_label_k,
-            activitys_insight_k=activity_insight_k,
-            academics_insight_k=academic_insight_k
+            developer_id=dev_id
         )
     
     except Exception as e:
