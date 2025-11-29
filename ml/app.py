@@ -33,7 +33,10 @@ class ProsesResponse(BaseModel):
     status: int
     message: str
     developer_id: str | int
-    
+    clusters_label_k: str | None = None
+    activitys_insight_k: str | None = None
+    academics_insight_k: str | None = None
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -55,17 +58,26 @@ def check(req: ProsesRequest):
         academic_type = label_academic(academic_score)
 
         prompt_cluster_label_k = f"""
-        User ini ada di cluster {map_cluster_label(cluster_id)}.
-
-        Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
-
-        Format wajibnya adalah:
-        [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
-
-        KETENTUAN SANGAT KETAT:
-        Hasil harus HANYA SATU (1) kalimat.
-        Total kata TIDAK BOLEH melebihi 15.
-        Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
+        Berdasarkan data, user ini termasuk kategori pembelajaran: **{map_cluster_label(cluster_id)}**.
+        
+        Tugasmu adalah menulis satu paragraf insight yang menggambarkan karakter belajar user secara natural dan mudah dipahami.
+        
+        Ketentuan:
+        - Maksimal 2 kalimat.
+        - Tidak lebih dari 1 angka, dan hanya jika benar-benar relevan.
+        - Tidak boleh menampilkan angka yang ekstrem, absurd, atau tidak manusiawi.
+        - Gaya bahasa santai, ramah, dan intuitif (seperti mentor memberi masukan).
+        - Fokus pada 3 aspek:
+            1) Karakter belajar user
+            2) Kekuatan utama
+            3) Saran yang konkret dan mudah dilakukan
+        
+        Dilarang:
+        - Menyebutkan istilah machine learning, model, cluster, atau teknis data lainnya.
+        - Mengurai statistik mentah.
+        
+        Contoh gaya yang diinginkan:
+        "Belajarmu stabil dan terarah. Kamu cepat paham inti materi dan tetap konsisten menyelesaikan tugas. Pertahankan ritme seperti ini biar progres belajarmu makin mulus."
         """
 
         respon_cluster_label_k = gemini.models.generate_content(
@@ -75,17 +87,25 @@ def check(req: ProsesRequest):
         cluster_label_k = respon_cluster_label_k.text.strip()
 
         prompt_activity_insight_k = f"""
-        User ini ada di cluster {activity_type}.
+        User ini memiliki aktivitas belajar dengan kategori: **{activity_type}**.
+        
+        Buat insight ringkas mengenai pola aktivitas belajarnya.
+        
+        Ketentuan:
+        - Maksimal 2 kalimat.
+        - Tidak lebih dari 1 angka jika diperlukan (misal jumlah materi yang selesai).
+        - Tonenya positif dan suportif.
+        - Fokus pada:
+            • Konsistensi belajar
+            • Kebiasaan menyelesaikan materi
+            • Ritme belajar sehari-hari
+            • Saran untuk meningkatkan pola aktivitas
+            
+        Dilarang menampilkan durasi hari, menit, atau angka ekstrem lain.
+            
+        Contoh gaya:
+        "Belajarmu cukup stabil dan materi yang kamu mulai kebanyakan berhasil kamu selesaikan. Cukup jaga ritme ini sambil menambah sedikit waktu fokus untuk materi yang lebih menantang."
 
-        Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
-
-        Format wajibnya adalah:
-        [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
-
-        KETENTUAN SANGAT KETAT:
-        Hasil harus HANYA SATU (1) kalimat.
-        Total kata TIDAK BOLEH melebihi 15.
-        Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
         """
 
         respon_activity_insight_k = gemini.models.generate_content(
@@ -95,17 +115,23 @@ def check(req: ProsesRequest):
         activity_insight_k = respon_activity_insight_k.text.strip()
 
         prompt_academic_insight_k = f"""
-        User ini ada di cluster {academic_type}.
-
-        Tuliskan sebuah INSIGHT dalam SATU KALIMAT MAJEMUK yang padat, tidak lebih dari 15 KATA TOTAL.
-
-        Format wajibnya adalah:
-        [Karakter Belajar] + [Kekuatan Utama] + [Saran Belajar Paling Cocok]
-
-        KETENTUAN SANGAT KETAT:
-        Hasil harus HANYA SATU (1) kalimat.
-        Total kata TIDAK BOLEH melebihi 15.
-        Gunakan bahasa santai gen-z dan DILARANG KERAS membahas hal teknis ML.
+        User ini memiliki performa akademik dengan kategori: **{academic_type}**.
+        
+        Tuliskan insight akademik user dalam bentuk saran praktis dan motivatif.
+        
+        Ketentuan:
+        - Maksimal 2 kalimat.
+        - Boleh menyebut nilai rata-rata hanya jika diperlukan, tetapi 1 angka saja.
+        - Fokus pada:
+            • Kualitas pemahaman materi
+            • Hasil ujian
+            • Konsistensi submission
+            • Saran yang actionable
+        
+        Jangan menuliskan statistik panjang atau angka besar.
+        
+        Contoh gaya:
+        "Performa ujianmu stabil dan menunjukkan pemahaman yang kuat. Tinggal sedikit meningkatkan kualitas submission biar hasil belajarmu makin solid."
         """
 
         respon_academic_insight_k = gemini.models.generate_content(
@@ -141,15 +167,18 @@ def check(req: ProsesRequest):
         action = upsert_process_ml_user(data_for_db)
 
         if action == "insert":
-            msg = "Insight berhasil & data baru berhasil disimpan."
+            msg = "Insight berhasil disimpan."
         else:
-            msg = "Insight berhasil& data lama berhasil diperbarui."
+            msg = "Insight berhasil diperbarui."
         
         return ProsesResponse(
             success=True,
             status=200,
             message=msg,
-            developer_id=dev_id
+            developer_id=dev_id,
+            clusters_label_k=cluster_label_k,
+            activitys_insight_k=activity_insight_k,
+            academics_insight_k=academic_insight_k
         )
     
     except Exception as e:
