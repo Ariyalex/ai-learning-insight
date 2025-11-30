@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
-app.use("/", insightRouter);
+app.use("/insight", insightRouter);
 app.use("/tracking", trackingtRouter);
 
 app.use((req, res) => {

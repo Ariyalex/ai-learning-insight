@@ -1,4 +1,5 @@
 const autoBind = require("auto-bind");
+const NotFoundError = require("../exceptions/NotFoundError");
 
 class InsightRepository {
   constructor() {
@@ -6,32 +7,55 @@ class InsightRepository {
     autoBind(this);
   }
 
-  async findMany({ userId, cluster, limit, offset, order }) {
-    const where = [];
-    const params = [];
-
-    if (userId !== undefined && userId !== null && userId !== "") {
-      params.push(Number(userId));
-      where.push(`user_id = $${params.length}`);
-    }
-    if (cluster !== undefined && cluster !== null && cluster !== "") {
-      params.push(Number(cluster));
-      where.push(`cluster = $${params.length}`);
-    }
-
-    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  async findMany({ userId }) {
     const sql = `
       SELECT *
       FROM insights
-      ${whereSql}
-      ORDER BY created_at ${order === "ASC" ? "ASC" : "DESC"}, id ${
-      order === "ASC" ? "ASC" : "DESC"
-    }
-      LIMIT ${limit} OFFSET ${offset}
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1;
     `;
 
-    const { rows } = await this.db.query(sql, params);
+    const { rows } = await this.db.query(sql, [userId]);
+
+    if (!rows.length) {
+      throw new NotFoundError("Insight tidak ditemukan");
+    }
+
+    return rows[0];
+  }
+
+  async getAllInsight() {
+    //   const sql = `
+    //   SELECT *
+    //   FROM insights
+    //   WHERE user_id = $1
+    //   ORDER BY created_at DESC
+    //   LIMIT 1;
+    // `;
+    // diganti
+
+    const { rows } = await this.db.query(sql, [userId]);
+
     return rows;
+  }
+
+  async getInsightByid(id) {
+    const sql = `
+      SELECT *
+      FROM insights
+      WHERE id = $1
+      ORDER BY created_at DESC
+      LIMIT 1;
+    `;
+
+    const { rows } = await this.db.query(sql, [id]);
+
+    if (!rows.length) {
+      throw new NotFoundError("Insight tidak ditemukan");
+    }
+
+    return rows[0];
   }
 }
 
