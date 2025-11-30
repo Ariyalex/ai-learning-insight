@@ -2,12 +2,16 @@ const express = require("express");
 const authRouter = require("./routes/AuthenticationsRoute");
 const errorHandler = require("./middlewares/ErrorHandler");
 const userRouter = require("./routes/UserRoute");
+const insightRouter = require("./routes/InsightRoute");
+const trackingtRouter = require("./routes/TrackingRoute");
 
 const app = express();
 app.use(express.json());
 
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
+app.use("/", insightRouter);
+app.use("/tracking", trackingtRouter);
 
 app.use((req, res) => {
   res.status(404).json({
