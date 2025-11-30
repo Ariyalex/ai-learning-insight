@@ -9,60 +9,34 @@ class TrackingController {
   }
 
   getTabel = async (req, res) => {
-    const result = await this.trackingService.getTrackings();
+    // ambil id user dari token; fallback ke query kalau perlu
+    const devId = Number(
+      req.user?.id ?? req.query.developer_id ?? req.query.developerId
+    );
 
-    const items = (result.items || [])
-      .filter((r) => r.completed_at === null)
-      .map((r) => ({
-        last_viewed: r.last_viewed,
-        first_opened_at: r.first_opened_at,
-        completed_at: r.completed_at,
-      }));
-
-    const filtered = (result.items || [])
-      .filter(
-        (r) =>
-          !(
-            r.first_opened_at &&
-            r.last_viewed &&
-            r.first_opened_at === r.last_viewed
-          )
-      )
-      .map((r) => ({
-        id: r.id,
-        last_viewed: r.last_viewed,
-        first_opened_at: r.first_opened_at,
-        completed_at: r.completed_at,
-      }));
-
-    return success(res, {
-      status: 200,
-      message: "Chart data",
-      //   data: result,
-      data: filtered, // <= hanya 3 field
-    });
-  };
-
-  getTabelById = async (req, res) => {
-    const { id } = req.body;
-    console.log(id);
-    const row = await this.trackingService.getTrackingById(id);
-    if (!row) {
-      return res
-        .status(404)
-        .json({ success: false, status: 404, message: "Tracking not found" });
+    if (!Number.isFinite(devId)) {
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: "developer_id tidak valid",
+      });
     }
 
-    const filtered = {
-      last_viewed: row.last_viewed,
-      first_opened_at: row.first_opened_at,
-      completed_at: row.completed_at,
-    };
+    // paksa filter ke repository
+    const result = await this.trackingService.getTrackings({
+      developerId: devId,
+    });
+
+    const formatted = (result.items || []).map((item) => ({
+      start_date: item.start_date,
+      end_date: item.end_date,
+      total: Number(item.total),
+    }));
 
     return success(res, {
       status: 200,
       message: "OK",
-      data: filtered,
+      data: formatted,
     });
   };
 }

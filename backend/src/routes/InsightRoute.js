@@ -8,5 +8,4 @@ const controller = new InsightController();
 
 router.get("/insight", auth, asyncHandler(controller.getInsight));
 router.get("/insight/process", auth, asyncHandler(controller.processInsight));
-router.get("/insight/chart", auth, asyncHandler(controller.getTabel));
 module.exports = router;

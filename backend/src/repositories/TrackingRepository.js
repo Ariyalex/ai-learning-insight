@@ -6,117 +6,62 @@ class JourneyTrackingRepository {
     autoBind(this);
   }
 
-  async findMany({
-    developerId,
-    journeyId,
-    tutorialId,
-    limit = 50,
-    offset = 0,
-  } = {}) {
-    const where = [];
-    const params = [];
+  async findMany({ developerId, developer_id } = {}) {
+    const devId = developerId ?? developer_id;
 
-    if (developerId) {
-      params.push(Number(developerId));
+    const params = [];
+    const where = [];
+
+    if (
+      devId !== undefined &&
+      devId !== null &&
+      String(devId).trim() !== "" &&
+      Number.isFinite(Number(devId))
+    ) {
+      params.push(Number(devId));
       where.push(`developer_id = $${params.length}`);
     }
 
-    if (journeyId) {
-      params.push(Number(journeyId));
-      where.push(`journey_id = $${params.length}`);
-    }
-
-    if (tutorialId) {
-      params.push(Number(tutorialId));
-      where.push(`tutorial_id = $${params.length}`);
-    }
-
-    // sanitasi angka biar aman
-    const lim =
-      Number.isFinite(Number(limit)) && Number(limit) > 0
-        ? Math.min(Number(limit), 100)
-        : 20;
-    const off =
-      Number.isFinite(Number(offset)) && Number(offset) >= 0
-        ? Number(offset)
-        : 0;
-
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
-    // 1 query: ambil data + total baris (tanpa limit) via window function
+    const selectDeveloper = params.length
+      ? `MIN(developer_id)::int AS developer_id,`
+      : `developer_id::int AS developer_id,`;
+
+    const groupBy = params.length
+      ? `GROUP BY bucket_start`
+      : `GROUP BY developer_id, bucket_start`;
+
     const sql = `
+    WITH base AS (
+      SELECT
+        developer_id,
+        last_viewed::date AS d,
+        (DATE '1970-01-01'
+           + (((last_viewed::date - DATE '1970-01-01') / 4) * INTERVAL '4 days')
+         )::date AS bucket_start
+      FROM developer_journey_trackings
+      ${whereSql}
+    )
     SELECT
-      id,
-      journey_id,
-      tutorial_id,
-      developer_id,
-      last_viewed,
-      first_opened_at,
-      completed_at,
-      COUNT(*) OVER() AS __total
-    FROM developer_journey_trackings
-    ${whereSql}
-    ORDER BY last_viewed DESC
-    LIMIT ${lim} OFFSET ${off}
+      ${selectDeveloper}
+      bucket_start::text AS start_date,
+      (bucket_start + INTERVAL '3 days')::date::text AS end_date,
+      COUNT(*)::int AS total
+    FROM base
+    ${groupBy}
+    ORDER BY start_date ASC
   `;
 
     const { rows } = await this.db.query(sql, params);
 
-    const total = rows[0]?.__total ? Number(rows[0].__total) : 0;
-    const items = rows.map((r) => {
-      const { __total, ...rest } = r;
-      return rest;
-    });
-
     return {
-      items,
-      total,
-      limit: lim,
-      offset: off,
-      has_more: off + items.length < total,
+      items: rows,
+      total: rows.length,
+      limit: rows.length,
+      offset: 0,
+      has_more: false,
     };
-  }
-
-  async findById(id) {
-    const sql = `
-      SELECT *
-      FROM developer_journey_trackings
-      WHERE id = $1
-    `;
-    const { rows } = await this.db.query(sql, [id]);
-    return rows[0] || null;
-  }
-
-  /**
-   * Insert data tracking (jika diperlukan)
-   * - HANYA jika kamu mau insert manual dari backend
-   */
-  async create({
-    journeyId,
-    tutorialId,
-    developerId,
-    lastViewed,
-    firstOpenedAt,
-    completedAt,
-  }) {
-    const sql = `
-      INSERT INTO developer_journey_trackings 
-        (journey_id, tutorial_id, developer_id, last_viewed, first_opened_at, completed_at)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `;
-
-    const params = [
-      journeyId,
-      tutorialId,
-      developerId,
-      lastViewed,
-      firstOpenedAt || null,
-      completedAt || null,
-    ];
-
-    const { rows } = await this.db.query(sql, params);
-    return rows[0];
   }
 }
 

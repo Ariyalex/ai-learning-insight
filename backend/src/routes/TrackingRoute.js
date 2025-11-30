@@ -7,5 +7,4 @@ const router = express.Router();
 const controller = new TrackingController();
 
 router.get("/chart", auth, asyncHandler(controller.getTabel));
-router.get("/id", auth, asyncHandler(controller.getTabelById));
 module.exports = router;

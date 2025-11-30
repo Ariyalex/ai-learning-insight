@@ -24,7 +24,9 @@ class InsightRepository {
       SELECT *
       FROM insights
       ${whereSql}
-      ORDER BY id ${order === "ASC" ? "ASC" : "DESC"}
+      ORDER BY created_at ${order === "ASC" ? "ASC" : "DESC"}, id ${
+      order === "ASC" ? "ASC" : "DESC"
+    }
       LIMIT ${limit} OFFSET ${offset}
     `;
 

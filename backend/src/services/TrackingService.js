@@ -10,10 +10,6 @@ class TrackingService {
   async getTrackings(query) {
     return this.trackingRepo.findMany(query);
   }
-
-  async getTrackingById(id) {
-    return this.trackingRepo.findById(id);
-  }
 }
 
 module.exports = TrackingService;
