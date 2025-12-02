@@ -9,7 +9,6 @@ class TrackingController {
   }
 
   getTabel = async (req, res) => {
-    // ambil id user dari token; fallback ke query kalau perlu
     const devId = Number(
       req.user?.id ?? req.query.developer_id ?? req.query.developerId
     );
@@ -22,7 +21,6 @@ class TrackingController {
       });
     }
 
-    // paksa filter ke repository
     const result = await this.trackingService.getTrackings({
       developerId: devId,
     });

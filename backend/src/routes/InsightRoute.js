@@ -8,6 +8,7 @@ const controller = new InsightController();
 
 insightRouter.get("/", auth, asyncHandler(controller.getInsightByUser));
 insightRouter.get("/process", auth, asyncHandler(controller.processInsight));
-insightRouter.get("/:id", auth);
+insightRouter.get("/logs", auth, asyncHandler(controller.getAllInsights));
+insightRouter.get("/:id", auth, asyncHandler(controller.getInsightById));
 
 module.exports = insightRouter;

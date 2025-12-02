@@ -7,7 +7,7 @@ class InsightRepository {
     autoBind(this);
   }
 
-  async findMany({ userId }) {
+  async getInsight({ userId }) {
     const sql = `
       SELECT *
       FROM insights
@@ -25,15 +25,13 @@ class InsightRepository {
     return rows[0];
   }
 
-  async getAllInsight() {
-    //   const sql = `
-    //   SELECT *
-    //   FROM insights
-    //   WHERE user_id = $1
-    //   ORDER BY created_at DESC
-    //   LIMIT 1;
-    // `;
-    // diganti
+  async getAllInsightsByUser({ userId }) {
+    const sql = `
+    SELECT *
+    FROM insights
+    WHERE user_id = $1
+    ORDER BY created_at DESC;
+  `;
 
     const { rows } = await this.db.query(sql, [userId]);
 

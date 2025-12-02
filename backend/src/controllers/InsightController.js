@@ -1,3 +1,4 @@
+const axios = require("axios");
 const autoBind = require("auto-bind");
 const InsightService = require("../services/InsightService");
 const { success } = require("../utils/responseFormatter");
@@ -8,78 +9,79 @@ class InsightController {
     autoBind(this);
   }
 
-  // processInsight = async (req, res) => {
-  //   // Base URL ML service
-  //   const baseUrl = (
-  //     process.env.ML_BASE_URL || "http://localhost:8000"
-  //   ).replace(/\/$/, "");
-  //   const url = `${baseUrl}/process/`;
+  processInsight = async (req, res) => {
+    try {
+      const developerId = req.user.id;
+      const base = (process.env.ML_BASE_URL || "http://localhost:8000").replace(
+        /\/$/,
+        ""
+      );
 
-  //   // Ambil query param dari FE
-  //   const queryParams = new URLSearchParams();
+      const payload = { developer_id: developerId };
+      const mlResponse = await axios.post(`${base}/proses/insight`, payload, {
+        timeout: 10000,
+      });
 
-  //   for (const [key, value] of Object.entries(req.query || {})) {
-  //     if (
-  //       value !== undefined &&
-  //       value !== null &&
-  //       String(value).trim() !== ""
-  //     ) {
-  //       queryParams.append(key, value);
-  //     }
-  //   }
-
-  //   // Bentuk final GET URL
-  //   const finalUrl = `${url}?${queryParams.toString()}`;
-
-  //   try {
-  //     const controller = new AbortController();
-  //     const timeoutMs = Number(process.env.ML_TIMEOUT_MS) || 10000;
-  //     const t = setTimeout(() => controller.abort(), timeoutMs);
-
-  //     const resp = await fetch(finalUrl, {
-  //       method: "GET",
-  //       signal: controller.signal,
-  //     }).finally(() => clearTimeout(t));
-
-  //     const raw = await resp.text();
-  //     let data;
-  //     try {
-  //       data = JSON.parse(raw);
-  //     } catch {
-  //       data = { raw };
-  //     }
-
-  //     // if (!resp.ok) {
-  //     //   return res.status(502).json({
-  //     //     success: false,
-  //     //     status: 502,
-  //     //     message: "ML service error",
-  //     //     detail: data,
-  //     //   });
-  //     // }
-
-  //     return success(res, {
-  //       status: 200,
-  //       message: "process insight success",
-  //       data,
-  //     });
-  //   } catch (err) {
-  //     const isAbort = err?.name === "AbortError";
-  //     return res.status(isAbort ? 504 : 500).json({
-  //       success: false,
-  //       status: isAbort ? 504 : 500,
-  //       message: isAbort ? "ML service timeout" : "Failed to process insight",
-  //       error: String(err?.message || err),
-  //     });
-  //   }
-  // };
+      return success(res, {
+        status: 200,
+        message: "Insight processed successfully",
+        data: mlResponse.data,
+      });
+    } catch (err) {
+      return res.status(502).json({
+        success: false,
+        message: "Gagal memproses insight dari ML",
+        error: err.message,
+      });
+    }
+  };
 
   getInsightByUser = async (req, res) => {
     const userId = req.user.id;
+    const row = await this.insightService.getInsight({ userId });
 
-    const data = await this.insightService.getInsights({
-      userId,
+    const {
+      user_id,
+      cluster_label,
+      activity_insight,
+      academic_insight,
+      academic_insight_k,
+      activity_insight_k,
+      cluster_label_k,
+      created_at,
+    } = row;
+
+    return success(res, {
+      status: 200,
+      message: "Insights retrieved successfully",
+      data: {
+        user_id,
+        cluster_label,
+        activity_insight,
+        academic_insight,
+        academic_insight_k,
+        activity_insight_k,
+        cluster_label_k,
+        created_at,
+      },
     });
+  };
+
+  getAllInsights = async (req, res) => {
+    const userId = req.user.id;
+    const rows = await this.insightService.getAllInsights({ userId });
+
+    const data = rows.map((r) => ({
+      id: r.id,
+      user_id: r.user_id,
+      cluster_label: r.cluster_label,
+      activity_insight: r.activity_insight,
+      academic_insight: r.academic_insight,
+      academic_insight_k: r.academic_insight_k,
+      activity_insight_k: r.activity_insight_k,
+      cluster_label_k: r.cluster_label_k,
+      created_at: r.created_at,
+    }));
 
     return success(res, {
       status: 200,
@@ -91,6 +93,33 @@ class InsightController {
   getInsightById = async (req, res) => {
     const { id: insightId } = req.params;
     const userId = req.user.id;
+
+    const data = await this.insightService.getInsightById(insightId);
+
+    if (data.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Insight ini bukan milik Anda",
+      });
+    }
+
+    const filtered = {
+      id: data.id,
+      user_id: data.user_id,
+      cluster_label: data.cluster_label,
+      activity_insight: data.activity_insight,
+      academic_insight: data.academic_insight,
+      academic_insight_k: data.academic_insight_k,
+      activity_insight_k: data.activity_insight_k,
+      cluster_label_k: data.cluster_label_k,
+      created_at: data.created_at,
+    };
+
+    return success(res, {
+      status: 200,
+      message: "Insight retrieved successfully",
+      data: filtered,
+    });
   };
 }
 
