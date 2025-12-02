@@ -1,7 +1,7 @@
 const axios = require("axios");
 const autoBind = require("auto-bind");
 const InsightService = require("../services/InsightService");
-const { success } = require("../utils/responseFormatter");
+const { success, error } = require("../utils/responseFormatter");
 
 class InsightController {
   constructor() {
@@ -12,26 +12,19 @@ class InsightController {
   processInsight = async (req, res) => {
     try {
       const developerId = req.user.id;
-      const base = (process.env.ML_BASE_URL || "http://localhost:8000").replace(
-        /\/$/,
-        ""
-      );
 
       const payload = { developer_id: developerId };
-      const mlResponse = await axios.post(`${base}/proses/insight`, payload, {
-        timeout: 10000,
-      });
+      await axios.post(`http://ml:8000/proses/insight`, payload);
 
       return success(res, {
         status: 200,
         message: "Insight processed successfully",
-        data: mlResponse.data,
       });
     } catch (err) {
-      return res.status(502).json({
-        success: false,
-        message: "Gagal memproses insight dari ML",
-        error: err.message,
+      console.log(err);
+      return error(res, {
+        status: 502,
+        message: err.message,
       });
     }
   };
@@ -41,6 +34,7 @@ class InsightController {
     const row = await this.insightService.getInsight({ userId });
 
     const {
+      id,
       user_id,
       cluster_label,
       activity_insight,
@@ -55,6 +49,7 @@ class InsightController {
       status: 200,
       message: "Insights retrieved successfully",
       data: {
+        id,
         user_id,
         cluster_label,
         activity_insight,
