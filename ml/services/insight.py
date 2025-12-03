@@ -45,105 +45,66 @@ def map_cluster_label(cluster_id: int) -> str:
 
 def upsert_process_ml_user(data: dict):
     """
-    Insert atau update otomatis berdasarkan developer_id.
+    Insert
     Return:
-        "insert" jika data baru
-        "update" jika data sudah ada dan diperbarui
+        "Insight berhasil disimpan."
     """
 
     conn = get_connection()
     try:
         with conn.cursor() as cur:
+            # -----------------------
+            # INSERT BARU
+            # -----------------------
+            cur.execute(f"""
+                INSERT INTO insights (
+                    user_id,
+                    total_materials_opened,
+                    total_active_days,
+                    total_completed,
+                    avg_submission_rating,
+                    avg_submission_duration,
+                    total_study_duration,
+                    avg_completion_rating,
+                    avg_exam_score,
+                    exam_pass_rate,
+                    exam_count,
+                    cluster,
+                    cluster_label,
+                    activity_score,
+                    academic_score,
+                    activity_insight,
+                    academic_insight,
+                    cluster_label_k,
+                    activity_insight_k,
+                    academic_insight_k
+                )
+                VALUES (
+                    %(user_id)s,
+                    %(total_materials_opened)s,
+                    %(total_active_days)s,
+                    %(total_completed)s,
+                    %(avg_submission_rating)s,
+                    %(avg_submission_duration)s,
+                    %(total_study_duration)s,
+                    %(avg_completion_rating)s,
+                    %(avg_exam_score)s,
+                    %(exam_pass_rate)s,
+                    %(exam_count)s,
+                    %(cluster)s,
+                    %(cluster_label)s,
+                    %(activity_score)s,
+                    %(academic_score)s,
+                    %(activity_insight)s,
+                    %(academic_insight)s,
+                    %(cluster_label_k)s,
+                    %(activity_insight_k)s,
+                    %(academic_insight_k)s
+                )
+            """, data)
 
-            cur.execute(f"""SELECT user_id FROM insights WHERE user_id = %s""", (data["user_id"],))
-
-            exists = cur.fetchone() is not None
-
-            if not exists:
-                # -----------------------
-                # INSERT BARU
-                # -----------------------
-                cur.execute(f"""
-                    INSERT INTO insights (
-                        user_id,
-                        total_materials_opened,
-                        total_active_days,
-                        total_completed,
-                        avg_submission_rating,
-                        avg_submission_duration,
-                        total_study_duration,
-                        avg_completion_rating,
-                        avg_exam_score,
-                        exam_pass_rate,
-                        exam_count,
-                        cluster,
-                        cluster_label,
-                        activity_score,
-                        academic_score,
-                        activity_insight,
-                        academic_insight,
-                        cluster_label_k,
-                        activity_insight_k,
-                        academic_insight_k
-                    )
-                    VALUES (
-                        %(user_id)s,
-                        %(total_materials_opened)s,
-                        %(total_active_days)s,
-                        %(total_completed)s,
-                        %(avg_submission_rating)s,
-                        %(avg_submission_duration)s,
-                        %(total_study_duration)s,
-                        %(avg_completion_rating)s,
-                        %(avg_exam_score)s,
-                        %(exam_pass_rate)s,
-                        %(exam_count)s,
-                        %(cluster)s,
-                        %(cluster_label)s,
-                        %(activity_score)s,
-                        %(academic_score)s,
-                        %(activity_insight)s,
-                        %(academic_insight)s,
-                        %(cluster_label_k)s,
-                        %(activity_insight_k)s,
-                        %(academic_insight_k)s
-                    )
-                """, data)
-
-                conn.commit()
-                return "insert"
-
-            else:
-                # -----------------------
-                # UPDATE DATA
-                # -----------------------
-                cur.execute(f"""
-                    UPDATE insights
-                    SET
-                        total_materials_opened = %(total_materials_opened)s,
-                        total_active_days = %(total_active_days)s,
-                        total_completed = %(total_completed)s,
-                        avg_submission_rating = %(avg_submission_rating)s,
-                        avg_submission_duration = %(avg_submission_duration)s,
-                        total_study_duration = %(total_study_duration)s,
-                        avg_completion_rating = %(avg_completion_rating)s,
-                        avg_exam_score = %(avg_exam_score)s,
-                        exam_pass_rate = %(exam_pass_rate)s,
-                        exam_count = %(exam_count)s,
-                        cluster = %(cluster)s,
-                        cluster_label = %(cluster_label)s,
-                        activity_score = %(activity_score)s,
-                        academic_score = %(academic_score)s,
-                        activity_insight = %(activity_insight)s,
-                        academic_insight = %(academic_insight)s,
-                        cluster_label_k = %(cluster_label_k)s,
-                        activity_insight_k = %(activity_insight_k)s,
-                        academic_insight_k = %(academic_insight_k)s
-                    WHERE user_id = %(user_id)s
-                """, data)
-
-                conn.commit()
-                return "update"
+            conn.commit()
+            return "Insight berhasil disimpan."
 
     except Exception as e:
         conn.rollback()
