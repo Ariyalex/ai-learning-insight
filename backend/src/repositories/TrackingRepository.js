@@ -1,68 +1,32 @@
 const autoBind = require("auto-bind");
 
-class JourneyTrackingRepository {
+class TrackingRepository {
   constructor() {
     this.db = require("../db");
     autoBind(this);
   }
 
-  async findMany({ developerId, developer_id } = {}) {
-    const devId = developerId ?? developer_id;
-
-    const params = [];
-    const where = [];
-
-    if (
-      devId !== undefined &&
-      devId !== null &&
-      String(devId).trim() !== "" &&
-      Number.isFinite(Number(devId))
-    ) {
-      params.push(Number(devId));
-      where.push(`developer_id = $${params.length}`);
-    }
-
-    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-
-    const selectDeveloper = params.length
-      ? `MIN(developer_id)::int AS developer_id,`
-      : `developer_id::int AS developer_id,`;
-
-    const groupBy = params.length
-      ? `GROUP BY bucket_start`
-      : `GROUP BY developer_id, bucket_start`;
+  async getTabel({ developerId }) {
+    if (!developerId) throw new Error("developerId is required");
 
     const sql = `
-    WITH base AS (
-      SELECT
-        developer_id,
-        last_viewed::date AS d,
-        (DATE '1970-01-01'
-           + (((last_viewed::date - DATE '1970-01-01') / 4) * INTERVAL '4 days')
-         )::date AS bucket_start
-      FROM developer_journey_trackings
-      ${whereSql}
-    )
-    SELECT
-      ${selectDeveloper}
-      bucket_start::text AS start_date,
-      (bucket_start + INTERVAL '3 days')::date::text AS end_date,
-      COUNT(*)::int AS total
-    FROM base
-    ${groupBy}
-    ORDER BY start_date ASC
-  `;
+  SELECT
+    developer_id::int AS developer_id,
+    to_char(date_trunc('week', last_viewed), 'YYYY-MM-DD')         AS start_date,
+    to_char(date_trunc('week', last_viewed) + INTERVAL '6 days', 'YYYY-MM-DD') AS end_date,
+    COUNT(*)::int AS total
+  FROM developer_journey_trackings
+  WHERE developer_id = $1
+  GROUP BY
+    developer_id,
+    date_trunc('week', last_viewed)
+  ORDER BY
+    date_trunc('week', last_viewed) ASC;
+`;
 
-    const { rows } = await this.db.query(sql, params);
-
-    return {
-      items: rows,
-      total: rows.length,
-      limit: rows.length,
-      offset: 0,
-      has_more: false,
-    };
+    const { rows } = await this.db.query(sql, [Number(developerId)]);
+    return { items: rows };
   }
 }
 
-module.exports = JourneyTrackingRepository;
+module.exports = TrackingRepository;

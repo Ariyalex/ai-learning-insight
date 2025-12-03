@@ -7,8 +7,11 @@ class TrackingService {
     autoBind(this);
   }
 
-  async getTrackings(query) {
-    return this.trackingRepo.findMany(query);
+  async getTabel({ developerId }) {
+    if (!Number.isFinite(Number(developerId))) {
+      throw new Error("developerId is required");
+    }
+    return this.trackingRepo.getTabel({ developerId: Number(developerId) });
   }
 }
 

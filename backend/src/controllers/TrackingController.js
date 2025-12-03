@@ -1,6 +1,7 @@
 const autoBind = require("auto-bind");
 const TrackingService = require("../services/TrackingService");
 const { success } = require("../utils/responseFormatter");
+const ClientError = require("../exceptions/ClientError");
 
 class TrackingController {
   constructor() {
@@ -10,31 +11,27 @@ class TrackingController {
 
   getTabel = async (req, res) => {
     const devId = Number(
-      req.user?.id ?? req.query.developer_id ?? req.query.developerId
+      req.user?.id ?? req.query.developerId ?? req.query.developer_id
     );
 
-    if (!Number.isFinite(devId)) {
-      return res.status(400).json({
-        success: false,
-        status: 400,
-        message: "developer_id tidak valid",
-      });
+    if (!Number.isFinite(devId) || !Number.isInteger(devId) || devId <= 0) {
+      throw new ClientError("developer_id tidak valid", 400);
     }
 
-    const result = await this.trackingService.getTrackings({
+    const { items = [] } = await this.trackingService.getTabel({
       developerId: devId,
     });
 
-    const formatted = (result.items || []).map((item) => ({
-      start_date: item.start_date,
-      end_date: item.end_date,
-      total: Number(item.total),
+    const data = items.map(({ start_date, end_date, total }) => ({
+      start_date,
+      end_date,
+      total: Number(total),
     }));
 
     return success(res, {
       status: 200,
       message: "OK",
-      data: formatted,
+      data,
     });
   };
 }
