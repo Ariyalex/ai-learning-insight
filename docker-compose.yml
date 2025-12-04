@@ -11,8 +11,8 @@ services:
       POSTGRES_DB: ai_learning_insight
     volumes:
       - db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    networks:
+      - internal
 
   backend:
     build:
@@ -21,13 +21,18 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - ./backend:/src
+      # - ./backend:/src
+      - backend-data:/src
       - /src/node_modules
     ports:
       - "3000:3000"
     depends_on:
       - db
+      - ml
     entrypoint: ["/bin/sh", "./entrypoint.sh"]
+    networks:
+      - internal
+      - public
 
   # untuk yang ml belum ada, jangan dirun dulu, nanti tim ML edit bagian ini ya
   ml:
@@ -37,12 +42,21 @@ services:
     env_file:
       - ./ml/.env
     volumes:
-      - ./ml:/app
+      - ml-data:/app
       - /app/__pycache__
-    ports:
-      - "8000:8000"
+    networks:
+      - internal
+      - public
     command:
       ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 volumes:
   db-data:
+  backend-data:
+  ml-data:
+
+networks:
+  internal:
+    internal: true
+  public:
+    driver: bridge

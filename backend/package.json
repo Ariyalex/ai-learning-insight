@@ -7,9 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "migrate:create": "node-pg-migrate create --migrations-dir src/migrations",
-    "migrate:up": "node-pg-migrate up --migrations-dir src/migrations",
-    "migrate:down": "node-pg-migrate down --migrations-dir src/migrations",
+    "migrate:create": "npx node-pg-migrate create --migrations-dir src/migrations",
+    "migrate:up": "npx node-pg-migrate up --migrations-dir src/migrations",
+    "migrate:down": "npx node-pg-migrate down --migrations-dir src/migrations",
     "import:csv": "node scripts/import.js"
   },
   "keywords": [],
