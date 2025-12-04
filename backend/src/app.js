@@ -4,8 +4,22 @@ const errorHandler = require("./middlewares/ErrorHandler");
 const userRouter = require("./routes/UserRoute");
 const insightRouter = require("./routes/InsightRoute");
 const trackingtRouter = require("./routes/TrackingRoute");
+const cors = require("cors");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:9100",
+      "http://127.0.0.1:9100",
+    ],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use("/auth", authRouter);

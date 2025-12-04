@@ -21,8 +21,8 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      # - ./backend:/src
-      - backend-data:/src
+      - ./backend:/src
+      # - backend-data:/src
       - /src/node_modules
     ports:
       - "3000:3000"
@@ -34,7 +34,6 @@ services:
       - internal
       - public
 
-  # untuk yang ml belum ada, jangan dirun dulu, nanti tim ML edit bagian ini ya
   ml:
     build:
       context: ./ml
@@ -42,7 +41,8 @@ services:
     env_file:
       - ./ml/.env
     volumes:
-      - ml-data:/app
+      - ./ml:/app
+      # - ml-data:/app
       - /app/__pycache__
     networks:
       - internal
