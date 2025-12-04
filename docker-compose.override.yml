@@ -9,13 +9,12 @@ services:
       - "3000:3000"
     depends_on:
       - db
+      - ml
     entrypoint: ["/bin/sh", "/src/entrypoint.sh"]
 
   ml:
     image: ghcr.io/ariyalex/ai-learning-insight-ml:latest
     env_file:
       - ./ml/.env
-    ports:
-      - "8000:8000"
     command:
       ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
