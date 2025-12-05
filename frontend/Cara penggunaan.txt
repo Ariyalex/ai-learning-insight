@@ -1,0 +1,11 @@
+
+Spesifikasi Nodejs : versi 20
+
+# yang pertama lakukan setting .env terlebih dahulu
+Dengan ubah nama file dari (.env.example -> .env)
+
+# yang kedua
+Jalankan perinta npm install
+
+# yang ketiga
+Jalankan perinta npm run dev

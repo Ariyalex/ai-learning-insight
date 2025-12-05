@@ -1,16 +1,16 @@
-version: "3.9"
-
 services:
   backend:
     image: ghcr.io/ariyalex/ai-learning-insight-backend:latest
     env_file:
       - ./backend/.env
-    ports:
-      - "3000:3000"
     depends_on:
       - db
       - ml
     entrypoint: ["/bin/sh", "/src/entrypoint.sh"]
+    expose:
+      - "3000"
+    networks:
+      - internal
 
   ml:
     image: ghcr.io/ariyalex/ai-learning-insight-ml:latest
@@ -18,3 +18,19 @@ services:
       - ./ml/.env
     command:
       ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    expose:
+      - "8000"
+    networks:
+      - internal
+      - public
+
+  frontend:
+    image: ghcr.io/ariyalex/ai-learning-insight-frontend:latest
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - internal
+      - public
