@@ -25,4 +25,4 @@ else
 fi
 
 echo "init task done. starting app..."
-exec npm run dev
+exec npm run start
