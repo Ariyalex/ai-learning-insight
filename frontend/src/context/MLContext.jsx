@@ -35,3 +35,5 @@ export function MLProvider({ children }) {
     </MLContext.Provider>
   );
 }
+
+export default MLProvider;

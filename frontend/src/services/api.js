@@ -4,6 +4,18 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(p => {
+    if (error) p.reject(error);
+    else p.resolve(token);
+  });
+
+  failedQueue = [];
+};
+
 // === Request Interceptor ===
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
@@ -13,13 +25,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// === Response Interceptor (simple refresh flow) ===
+// === Response Interceptor ===
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
 
-    // Kalau accessToken expired
+    // Abaikan kalau ini sendiri /auth/refresh → biarin fail
+    if (originalRequest.url.includes("/auth/refresh")) {
+      return Promise.reject(error);
+    }
+
+    // Kalau 401 + belum retry
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -30,26 +47,47 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      // Kalau refresh token lagi diproses → queue request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token) => {
+              originalRequest.headers.Authorization = "Bearer " + token;
+              resolve(api(originalRequest));
+            },
+            reject: (err) => reject(err)
+          });
+        });
+      }
+
+      isRefreshing = true;
+
       try {
-        // MINTA ACCESS TOKEN BARU
-        const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
-          { refreshToken }
-        );
+        const res = await api.post("/auth/refresh", { refreshToken });
 
         const newAccess = res.data.data.accessToken;
+        const newRefresh = res.data.data.refreshToken;
 
-        // Simpan token baru
+        // SIMPAN refresh token baru
         localStorage.setItem("accessToken", newAccess);
+        localStorage.setItem("refreshToken", newRefresh);
 
-        // Set token baru untuk axios
+        // Update header global
         api.defaults.headers.Authorization = `Bearer ${newAccess}`;
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
 
-        return api(originalRequest); // ulang request sekali
+        processQueue(null, newAccess);
+
+        return api(originalRequest);
+
       } catch (err) {
+        processQueue(err, null);
         localStorage.clear();
         window.location.href = "/login";
         return Promise.reject(err);
+
+      } finally {
+        isRefreshing = false;
       }
     }
 
