@@ -7,10 +7,11 @@ services:
       - db
       - ml
     entrypoint: ["/bin/sh", "/src/entrypoint.sh"]
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     networks:
       - internal
+      - public
 
   ml:
     image: ghcr.io/ariyalex/ai-learning-insight-ml:latest
@@ -28,7 +29,7 @@ services:
     image: ghcr.io/ariyalex/ai-learning-insight-frontend:latest
     container_name: frontend
     ports:
-      - "80:80"
+      - "5174:80"
     depends_on:
       - backend
     networks:
