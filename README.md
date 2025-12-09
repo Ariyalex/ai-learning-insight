@@ -1,19 +1,19 @@
 # AI Learning Insight — Petunjuk Docker (Windows)
 
-Panduan singkat ini menjelaskan cara menjalankan proyek menggunakan Docker Compose pada Windows (PowerShell atau CMD). Saya menyesuaikan perintah supaya cocok dipakai oleh pengembang yang bekerja di Windows.
+Panduan singkat ini menjelaskan cara menjalankan proyek menggunakan Docker Compose pada Windows atau Linux.
 
 Prasyarat
 
 - Docker Desktop (dengan Docker Compose v2)
-- (Opsional) `gh` (GitHub CLI) atau akses ke Docker registry jika image privat
 
 File penting
 
-- `docker-compose.yml` — konfigurasi layanan dasar (db, backend, ml)
-- `docker-compose.override.yml` — override untuk development / team (opsional)
-- `backend/.env`, `ml/.env` — file environment per service (JANGAN commit file berisi credential)
+- `docker-compose.yml` — konfigurasi layanan dasar (db, backend, ml, frontend)
+- `docker-compose.override.yml` — override untuk development / team
+- `backend/.env`, `ml/.env`, dan `frontend/.env` — file environment per service (JANGAN commit file berisi credential)
+- Folder `.csv_data` yang berisi file-file `csv` yang didapat dari mengkonversi `dataset` yang didapat dari dicoding. Maaf, kami tidak bisa melampirkan data tersebut di sini
 
-Quick start — Development (direkomendasikan)
+Quick start — Development
 
 1. Buat salinan file .env untuk diedit secara lokal (PowerShell):
 
@@ -32,9 +32,10 @@ Keterangan singkat
 
 - Mode development biasanya memanfaatkan `docker-compose.override.yml` untuk memasang (bind mount) folder `./backend` dan `./ml` ke container sehingga perubahan kode langsung terlihat.
 - Akses service di host:
+  - Frontend: http://localhost:8080
   - Backend: http://localhost:3000
-  - ML service: http://localhost:8000
-  - Postgres: localhost:5432
+  - ML service: ml:8000 (hanya bisa diakses di linkungan docker)
+  - Postgres: db:5432 (hanya bisa diakses di lingkungan docker)
 
 Migrations & import otomatis
 
