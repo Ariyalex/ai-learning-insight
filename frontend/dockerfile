@@ -17,7 +17,7 @@ FROM nginx:stable-alpine
 RUN rm -rf /usr/share/nginx/html/*
 
 # copy file build react ke direktory hosting nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=BUILDER /app/dist /usr/share/nginx/html
 
 # menyalin configurasi nginx custom
 COPY nginx.conf /etc/nginx/conf.d/default.conf

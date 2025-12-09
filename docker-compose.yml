@@ -27,10 +27,9 @@ services:
       - db
       - ml
     entrypoint: ["/bin/sh", "./entrypoint.sh"]
-    expose:
-      - "3000"
     networks:
       - internal
+      - public
 
   ml:
     build:
@@ -55,7 +54,7 @@ services:
       dockerfile: dockerfile
     container_name: frontend
     ports:
-      - "80:80"
+      - "5174:80"
     depends_on:
       - backend
     networks:
