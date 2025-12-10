@@ -19,58 +19,60 @@ function Login() {
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
+
     try {
       const res = await api.post("/auth/login", { email, password });
 
-      console.log("RESPONSE DARI BACKEND:", res.data)
-      console.log("accessToken:", res.data.data.accessToken)
-      console.log("refreshToken:", res.data.data.refreshToken)
+      // Simpan token
+      localStorage.setItem("accessToken", res.data.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.data.refreshToken);
 
-      // Simpan token ke localStorage
-      localStorage.setItem("accessToken", res.data.data.accessToken)
-      localStorage.setItem("refreshToken", res.data.data.refreshToken)
+      // MULAI proses ML dulu — jangan setUser dulu
+      let shouldGenerate = false;
 
-      // Fetch user info
-      const res_user = await api.get("/users/me");
-      setUser(res_user.data.data); // masukin ke context biar global
-
-      // ambil insight
       try {
-        await api.get("/insight")
+        await api.get("/insight");
       } catch (err) {
         if (err?.response?.status === 404) {
-          toast({
-            title: "⏳ Tunggu sebentar!",
-            description: "Sistem sedang menyiapkan insight perdana kamu...",
-          });
-          await api.get("/insight/process") // Generate kalau belum ada
+          shouldGenerate = true;
         }
       }
-      // Update insight ke global context
-      await loadPredict()
+
+      if (shouldGenerate) {
+        toast({
+          title: "⏳ Tunggu sebentar!",
+          description: "Sistem sedang memproses insight perdana...",
+        });
+
+        await api.get("/insight/process");
+      }
+
+      // Setelah insight siap → load insight ke MLContext
+      await loadPredict();
+
+      // Baru sekarang ambil user info dan set user
+      const res_user = await api.get("/users/me");
+      setUser(res_user.data.data);
 
       toast({
         title: "📢 Berhasil Login!",
         description: "Anda telah login, redirecting...",
-      })
+      });
 
-      // Redirect ke dashboard
-      navigate("/")
+      navigate("/");
+
     } catch (err) {
-
-      console.log("ERROR RESPONSE:", err.response)
-
       toast({
         title: "📢 Peringatan!",
-        description: err.response?.data?.message ||  "Gagal login, coba lagi.",
-      })
+        description: err.response?.data?.message || "Coba lagi ya.",
+      });
 
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">

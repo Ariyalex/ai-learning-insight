@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import logo_full from "./assets/logo_full.png"
 import { User, House, ChevronUp } from "lucide-react"
 import ProtectedRoute from "./components/ProtectedRoute"
+import PublicRoute from "./components/PublicRoute"
 import api from "./services/api";
 import { UserContext } from "./context/UserContext";
 import { Toaster } from "@/components/ui/toaster"
@@ -122,7 +123,14 @@ function Layout() {
       {/* Konten Halaman */}
       <main className="flex-1 p-6">
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } 
+          />
           <Route
             path="/"
             element={
