@@ -2,13 +2,28 @@ from typing import Dict, Tuple
 
 from .db import get_connection
 
+import json
+import os
+
+# Load quantile dari file
+BASE_DIR = os.path.dirname(__file__)
+QUANTILE_PATH = os.path.join(BASE_DIR, "quantiles.json")
+
+with open(QUANTILE_PATH, "r") as f:
+    Q = json.load(f)
+
 CLUSTER_LABELS = {
-    0: "Fast Learner",
+    0: "Reflective Learner",
     1: "Consistent Learner",
-    2: "Reflective Learner"
+    2: "Fast Learner",
 }
 
 def compute_activity_academic_scores(feat: Dict[str, float]) -> Tuple[float, float]:
+    # Normalisasi EXACT seperti notebook
+    exam_score_norm = feat["avg_exam_score"] / 100
+    pass_rate_norm = feat["exam_pass_rate"]  # sudah 0–1
+    submit_rating_norm = feat["avg_submission_rating"] / 100  # penting!
+
     activity_score = (
         feat["total_materials_opened"] * 0.3 +
         feat["total_active_days"] * 0.2 +
@@ -17,25 +32,31 @@ def compute_activity_academic_scores(feat: Dict[str, float]) -> Tuple[float, flo
     )
 
     academic_score = (
-        feat["avg_exam_score"] * 0.4 +
-        feat["exam_pass_rate"] * 0.3 +
-        feat["avg_submission_rating"] * 0.1
+        exam_score_norm * 0.4 +
+        pass_rate_norm * 0.3 +
+        submit_rating_norm * 0.1
     )
+
     return activity_score, academic_score
 
-def label_activity(activity_score: float) -> str:
-    # Sementara: threshold statis, kamu bisa ganti pakai quantile global
-    if activity_score > 0.66:
+def label_activity(score: float) -> str:
+    q33 = Q["activity"]["q33"]
+    q66 = Q["activity"]["q66"]
+
+    if score > q66:
         return "Sangat Aktif & Konsisten"
-    elif activity_score > 0.33:
+    elif score > q33:
         return "Cukup Aktif"
     else:
         return "Kurang Aktif"
 
-def label_academic(academic_score: float) -> str:
-    if academic_score > 0.66:
+def label_academic(score: float) -> str:
+    q33 = Q["academic"]["q33"]
+    q66 = Q["academic"]["q66"]
+
+    if score > q66:
         return "Performa Akademik Tinggi"
-    elif academic_score > 0.33:
+    elif score > q33:
         return "Performa Stabil"
     else:
         return "Performa Rendah"
