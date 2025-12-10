@@ -1,16 +1,25 @@
-import { useState, useEffect, useContext } from "react"
-import { useLocation } from "react-router-dom"
+import { useState, useEffect, useContext } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../services/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { BookText, Bell, Trophy, RefreshCcw, Loader2, Clock } from "lucide-react"
-import { MLContext } from "../context/MLContext"
-import { toast } from "../hooks/use-toast"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  BookText,
+  Bell,
+  Trophy,
+  RefreshCcw,
+  Loader2,
+  Clock,
+} from "lucide-react";
+import { MLContext } from "../context/MLContext";
+import { toast } from "../hooks/use-toast";
 import TrackingChart from "../components/TrackingChart";
+import ReactMarkdown from "react-markdown";
 
 function Dashboard() {
-  const { predict, setPredict, loadingPredict, loadPredict } = useContext(MLContext);
+  const { predict, setPredict, loadingPredict, loadPredict } =
+    useContext(MLContext);
   const [loading, setLoading] = useState(false);
 
   const location = useLocation();
@@ -38,7 +47,7 @@ function Dashboard() {
   const fetchInsight = async () => {
     try {
       setLoading(true);
-      
+
       // proses prediksi di backend
       await api.get("/insight/process");
 
@@ -46,8 +55,8 @@ function Dashboard() {
       await loadPredict();
 
       // Reset override, biar balik ke insight terbaru
-      setOverridePredict(null)
-      
+      setOverridePredict(null);
+
       toast({
         title: "📢 Berhasil Update Insight!",
         description: "Insight kamu udah di-refresh ke versi terbaru.",
@@ -55,7 +64,7 @@ function Dashboard() {
     } catch (err) {
       toast({
         title: "📢 Peringatan!",
-        description: err.response?.data?.message ||  "Gagal update, coba lagi.",
+        description: err.response?.data?.message || "Gagal update, coba lagi.",
       });
     } finally {
       setLoading(false);
@@ -86,14 +95,19 @@ function Dashboard() {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
-              </p>
+            </p>
           </div>
           <p className="text-gray-500 text-sm mt-1">
-            Insight ini menggambarkan pola belajar kamu. Jika kamu merasa ada peningkatan,
-            klik refresh agar sistem menghitung ulang berdasarkan data terbaru
+            Insight ini menggambarkan pola belajar kamu. Jika kamu merasa ada
+            peningkatan, klik refresh agar sistem menghitung ulang berdasarkan
+            data terbaru
           </p>
         </div>
-        <Button onClick={fetchInsight} disabled={loading} className="bg-primary text-white flex items-center gap-2">
+        <Button
+          onClick={fetchInsight}
+          disabled={loading}
+          className="bg-primary text-white flex items-center gap-2"
+        >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -116,32 +130,44 @@ function Dashboard() {
             <CardTitle>Aktifitas & Konsistensi Belajar</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg font-semibold">{data?.activity_insight  || "Loading..."}</p>
-            <p className="text-sm text-gray-500">{data?.activity_insight_k || "Loading..."}</p>
+            <p className="text-lg font-semibold">
+              {data?.activity_insight || "Loading..."}
+            </p>
+            <ReactMarkdown className="text-sm text-gray-500">
+              {data?.activity_insight_k || "Loading..."}
+            </ReactMarkdown>
           </CardContent>
         </Card>
 
         {/* Card 2 */}
         <Card>
           <CardHeader>
-            <Bell className="w-6 h-6 text-gray-400 mb-2" /> 
+            <Bell className="w-6 h-6 text-gray-400 mb-2" />
             <CardTitle>Tipe Pembelajaran</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg font-semibold">{data?.cluster_label  || "Loading..."}</p>
-            <p className="text-sm text-gray-500">{data?.cluster_label_k || "Loading..."}</p>
+            <p className="text-lg font-semibold">
+              {data?.cluster_label || "Loading..."}
+            </p>
+            <ReactMarkdown className="text-sm text-gray-500">
+              {data?.cluster_label_k || "Loading..."}
+            </ReactMarkdown>
           </CardContent>
         </Card>
 
         {/* Card 3 */}
         <Card>
           <CardHeader>
-            <Trophy className="w-6 h-6 text-gray-400 mb-2" /> 
+            <Trophy className="w-6 h-6 text-gray-400 mb-2" />
             <CardTitle>Kinerja Akademik</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg font-semibold">{data?.academic_insight  || "Loading..."}</p>
-            <p className="text-sm text-gray-500">{data?.academic_insight_k || "Loading..."}</p>
+            <p className="text-lg font-semibold">
+              {data?.academic_insight || "Loading..."}
+            </p>
+            <ReactMarkdown className="text-sm text-gray-500">
+              {data?.academic_insight_k || "Loading..."}
+            </ReactMarkdown>
           </CardContent>
         </Card>
 
@@ -149,7 +175,7 @@ function Dashboard() {
         <TrackingChart />
       </div>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

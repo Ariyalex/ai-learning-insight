@@ -71,7 +71,7 @@ def check(req: ProsesRequest):
         """
 
         respon_cluster_label_k = gemini.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
                 contents=prompt_cluster_label_k,
         )
         cluster_label_k = respon_cluster_label_k.text.strip()
@@ -93,7 +93,7 @@ def check(req: ProsesRequest):
         """
 
         respon_activity_insight_k = gemini.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
                 contents=prompt_activity_insight_k,
         )
         activity_insight_k = respon_activity_insight_k.text.strip()
@@ -112,7 +112,7 @@ def check(req: ProsesRequest):
         """
 
         respon_academic_insight_k = gemini.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
                 contents=prompt_academic_insight_k,
         )
         academic_insight_k = respon_academic_insight_k.text.strip()
